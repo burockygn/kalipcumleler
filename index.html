@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhraseMate</title>
+<script src="https://js.puter.com/v2/"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0f1729; --navy2:#1a2647; --navy3:#243366;
+  --blue:#3d5afe; --blue2:#5c77ff;
+  --accent:#fbbf24; --green:#10b981; --red:#ef4444; --purple:#8b5cf6;
+  --surface:#161f3a; --surface2:#1e2d50; --border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.14); --text:#e8ecf8; --muted:#7888b4; --muted2:#a0aecf;
+  --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--navy);color:var(--text);font-family:var(--font);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--navy3);border-radius:4px;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--navy);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .3s;}
+.sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid var(--border);}
+.logo-badge{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.logo-name{font-size:.95rem;font-weight:700;letter-spacing:-.3px;}
+.logo-sub{font-size:.62rem;color:var(--muted);letter-spacing:.5px;}
+
+/* Stats mini */
+.sidebar-stats{padding:12px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sstat{background:var(--surface);border-radius:8px;padding:8px 10px;}
+.sstat-val{font-size:1.1rem;font-weight:700;color:var(--text);font-family:var(--mono);}
+.sstat-label{font-size:.62rem;color:var(--muted);margin-top:1px;}
+.streak-val{color:var(--accent);}
+.learned-val{color:var(--green);}
+
+.sidebar-section{padding:12px 10px 4px;}
+.sidebar-label{font-size:.6rem;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);padding:0 8px;margin-bottom:5px;}
+.cat-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;color:var(--muted2);transition:all .15s;position:relative;border:none;background:none;width:100%;text-align:left;font-family:var(--font);}
+.cat-item:hover{background:var(--surface);color:var(--text);}
+.cat-item.active{background:var(--surface2);color:var(--text);}
+.cat-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;border-radius:3px;background:var(--blue);}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cat-count{margin-left:auto;font-size:.68rem;font-family:var(--mono);background:var(--surface2);padding:1px 6px;border-radius:10px;color:var(--muted);}
+
+/* Nav items */
+.nav-section{padding:8px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active-nav{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;}
+.nav-icon{font-size:1rem;width:20px;text-align:center;}
+
+.add-cat-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;margin:4px 10px;cursor:pointer;font-size:.78rem;color:var(--muted);background:none;border:1px dashed var(--border2);font-family:var(--font);transition:all .15s;width:calc(100% - 20px);}
+.add-cat-btn:hover{border-color:var(--blue);color:var(--blue2);}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border);font-size:.68rem;color:var(--muted);}
+
+/* ══ MAIN ══ */
+.main{margin-left:220px;display:flex;flex-direction:column;height:100vh;}
+.topbar{height:54px;flex-shrink:0;background:var(--navy);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 18px;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:.9rem;font-weight:600;flex:1;}
+.menu-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--muted2);font-size:1.2rem;padding:4px;}
+.search-wrap{position:relative;}
+.search-wrap input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 12px 7px 30px;font-size:.8rem;font-family:var(--font);color:var(--text);outline:none;width:180px;transition:border .15s,width .2s;}
+.search-wrap input:focus{border-color:var(--blue);width:220px;}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);pointer-events:none;}
+.speed-wrap{display:flex;align-items:center;gap:5px;font-size:.73rem;color:var(--muted);}
+.speed-wrap select{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:.73rem;color:var(--text);outline:none;font-family:var(--font);}
+.btn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:8px;cursor:pointer;font-family:var(--font);font-weight:600;white-space:nowrap;transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--blue);color:#fff;padding:7px 13px;font-size:.78rem;}
+.btn-primary:hover{opacity:.85;}
+.btn-green{background:var(--green);color:#fff;padding:7px 13px;font-size:.78rem;}
+.btn-green:hover{opacity:.85;}
+.btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:7px 11px;font-size:.78rem;}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);}
+.btn-purple{background:var(--purple);color:#fff;padding:7px 13px;font-size:.78rem;}
+.btn-purple:hover{opacity:.85;}
+
+/* ══ VIEWS ══ */
+.view{display:none;flex:1;overflow:hidden;}
+.view.active{display:flex;}
+
+/* ── TABLE VIEW ── */
+.table-view{flex-direction:column;}
+.content{flex:1;display:flex;overflow:hidden;}
+.table-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.stats-bar{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.stat-item{font-size:.72rem;color:var(--muted);}
+.stat-item strong{color:var(--text);font-size:.8rem;margin-right:2px;}
+.table-scroll{flex:1;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+thead th{position:sticky;top:0;z-index:10;background:var(--surface2);padding:9px 12px;text-align:left;font-size:.63rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;}
+thead th:first-child{width:36px;text-align:center;padding:9px 6px;}
+thead th.col-learned{width:80px;text-align:center;}
+thead th.col-cat{width:110px;}
+thead th.col-act{width:120px;text-align:center;}
+thead th.col-del{width:38px;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface);}
+tbody tr.filtered-out{display:none;}
+td{padding:5px 12px;vertical-align:middle;}
+td:first-child{text-align:center;color:var(--muted);font-family:var(--mono);font-size:.7rem;padding:5px 6px;}
+.cell-input{background:transparent;border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:.82rem;font-family:var(--font);color:var(--text);outline:none;width:100%;transition:border .12s,background .12s;}
+.cell-input:hover{border-color:var(--border2);}
+.cell-input:focus{border-color:var(--blue);background:var(--surface2);}
+.cell-input.en-cell{color:#93b4ff;font-style:italic;}
+.cell-input::placeholder{color:var(--muted);font-style:normal;}
+
+/* Learned checkbox */
+.learned-check{display:flex;align-items:center;justify-content:center;}
+.learn-btn{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s;color:transparent;}
+.learn-btn:hover{border-color:var(--green);color:var(--green);}
+.learn-btn.learned{background:var(--green);border-color:var(--green);color:#fff;}
+
+.cat-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;font-size:.68rem;font-weight:600;background:var(--surface2);color:var(--muted2);border:1px solid var(--border);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.cat-badge:hover{border-color:var(--border2);}
+.cat-badge .dot{width:6px;height:6px;border-radius:50%;}
+.cat-select{background:var(--surface2);border:1px solid var(--blue);border-radius:6px;padding:4px 6px;font-size:.78rem;color:var(--text);outline:none;font-family:var(--font);cursor:pointer;max-width:110px;}
+.speak-btn{display:inline-flex;align-items:center;gap:5px;background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:opacity .12s;}
+.speak-btn:hover{opacity:.8;}
+.speak-btn.playing{background:var(--red);animation:pulse .9s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;padding:5px 7px;border-radius:5px;transition:all .12s;}
+.del-btn:hover{color:var(--red);background:rgba(239,68,68,.1);}
+.add-row td{padding:7px 12px;background:var(--surface);}
+.add-cell-input{background:transparent;border:none;outline:none;font-size:.82rem;font-family:var(--font);color:var(--text);width:100%;padding:4px 7px;}
+.add-cell-input.en-cell{color:#93b4ff;font-style:italic;}
+.add-cell-input::placeholder{color:var(--muted);font-style:normal;}
+.add-inline-btn{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;font-family:var(--font);cursor:pointer;}
+
+/* ── DICT PANEL ── */
+.dict-panel{width:340px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--navy);}
+.dict-head{background:var(--surface);padding:11px 13px 9px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.dict-head-top{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.dict-logo{background:var(--accent);color:var(--navy);font-weight:800;font-size:.62rem;padding:2px 6px;border-radius:3px;letter-spacing:1.2px;}
+.dict-title-text{color:var(--muted2);font-size:.73rem;flex:1;}
+.dict-search-row{display:flex;gap:6px;}
+.dict-search-row input{flex:1;background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:.85rem;font-family:var(--font);color:var(--text);outline:none;transition:border .12s;}
+.dict-search-row input:focus{border-color:var(--blue);}
+.dict-search-btn{background:var(--accent);color:var(--navy);border:none;border-radius:7px;padding:8px 11px;font-weight:700;font-size:.78rem;font-family:var(--font);cursor:pointer;}
+.dict-lang-row{display:flex;gap:5px;margin-top:7px;}
+.dict-lang-btn{flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 0;font-size:.68rem;font-weight:700;font-family:var(--font);cursor:pointer;color:var(--muted);background:transparent;transition:all .12s;}
+.dict-lang-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.dict-body{flex:1;overflow:hidden;position:relative;}
+.dict-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.82rem;text-align:center;padding:30px;line-height:1.7;}
+.dict-placeholder .dicon{font-size:2rem;opacity:.5;}
+.dict-body iframe{width:100%;height:100%;border:none;display:none;}
+.dict-tip{padding:6px 13px;font-size:.68rem;color:var(--muted);border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.dict-tip a{color:var(--muted2);}
+
+/* ══ PROGRESS VIEW ══ */
+.progress-view{flex-direction:column;overflow-y:auto;padding:24px;}
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.prog-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.prog-card-icon{font-size:1.8rem;margin-bottom:10px;}
+.prog-card-val{font-size:2rem;font-weight:700;font-family:var(--mono);}
+.prog-card-label{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.prog-card.accent-green .prog-card-val{color:var(--green);}
+.prog-card.accent-yellow .prog-card-val{color:var(--accent);}
+.prog-card.accent-blue .prog-card-val{color:var(--blue2);}
+.prog-card.accent-purple .prog-card-val{color:var(--purple);}
+
+.prog-section-title{font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.cat-progress-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.cat-prog-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;}
+.cat-prog-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cat-prog-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.cat-prog-name{font-size:.85rem;font-weight:600;flex:1;}
+.cat-prog-nums{font-size:.75rem;color:var(--muted);font-family:var(--mono);}
+.prog-bar-bg{height:6px;background:var(--navy3);border-radius:6px;overflow:hidden;}
+.prog-bar-fill{height:100%;border-radius:6px;transition:width .6s ease;}
+
+.learned-list-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.learned-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:300px;overflow-y:auto;}
+.learned-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--navy);border-radius:8px;font-size:.82rem;}
+.learned-item-en{color:#93b4ff;font-style:italic;flex:1;}
+.learned-item-tr{color:var(--muted2);font-size:.78rem;}
+.learned-item-cat{font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--muted);}
+.empty-state{text-align:center;padding:30px;color:var(--muted);font-size:.85rem;}
+
+/* ══ FLASHCARD VIEW ══ */
+.flashcard-view{flex-direction:column;align-items:center;justify-content:flex-start;padding:24px;overflow-y:auto;}
+.fc-controls{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap;justify-content:center;}
+.fc-controls select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;font-family:var(--font);color:var(--text);outline:none;}
+.fc-mode-btns{display:flex;gap:6px;}
+.fc-mode-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted2);font-size:.78rem;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;}
+.fc-mode-btn.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+.fc-progress-bar{width:100%;max-width:540px;height:4px;background:var(--surface2);border-radius:4px;margin-bottom:20px;overflow:hidden;}
+.fc-progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:4px;transition:width .4s;}
+
+/* Card */
+.fc-card-wrap{width:100%;max-width:540px;perspective:1000px;cursor:pointer;margin-bottom:20px;}
+.fc-card{width:100%;min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1);}
+.fc-card.flipped{transform:rotateY(180deg);}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;min-height:260px;}
+.fc-front{background:linear-gradient(135deg,var(--navy3),var(--surface2));border:1px solid var(--border2);}
+.fc-back{background:linear-gradient(135deg,#1a3a2a,#1e3550);border:1px solid rgba(16,185,129,.3);transform:rotateY(180deg);}
+.fc-face-label{font-size:.65rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+.fc-face-text{font-size:1.4rem;font-weight:600;line-height:1.4;color:var(--text);}
+.fc-face-text.en-text{color:#93b4ff;font-style:italic;}
+.fc-face-sub{font-size:.8rem;color:var(--muted);margin-top:12px;}
+.fc-cat-tag{position:absolute;top:16px;right:16px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.65rem;font-weight:700;background:rgba(0,0,0,.3);}
+.fc-flip-hint{font-size:.72rem;color:var(--muted);opacity:.6;margin-top:10px;}
+
+/* Quiz mode */
+.fc-quiz-opts{width:100%;max-width:540px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.fc-quiz-opt{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:.88rem;cursor:pointer;text-align:center;transition:all .15s;font-family:var(--font);}
+.fc-quiz-opt:hover{border-color:var(--border2);background:var(--surface2);}
+.fc-quiz-opt.correct{background:rgba(16,185,129,.15);border-color:var(--green);color:var(--green);}
+.fc-quiz-opt.wrong{background:rgba(239,68,68,.1);border-color:var(--red);color:var(--red);}
+.fc-quiz-opt.show-correct{background:rgba(16,185,129,.15);border-color:var(--green);color:var(--green);}
+.fc-quiz-opt:disabled{cursor:default;}
+
+.fc-nav{display:flex;align-items:center;gap:12px;margin-top:4px;}
+.fc-nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 18px;font-size:.82rem;font-weight:600;font-family:var(--font);color:var(--muted2);cursor:pointer;transition:all .15s;}
+.fc-nav-btn:hover{border-color:var(--border2);color:var(--text);}
+.fc-nav-btn:disabled{opacity:.3;cursor:default;}
+.fc-counter{font-size:.8rem;color:var(--muted);font-family:var(--mono);min-width:70px;text-align:center;}
+
+.fc-result{width:100%;max-width:540px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:center;}
+.fc-result-icon{font-size:3rem;margin-bottom:12px;}
+.fc-result-title{font-size:1.3rem;font-weight:700;margin-bottom:6px;}
+.fc-result-sub{font-size:.85rem;color:var(--muted);}
+.fc-result-score{font-size:2.5rem;font-weight:700;font-family:var(--mono);color:var(--green);margin:16px 0;}
+
+/* ══ MODAL ══ */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:24px;width:320px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.modal h3{font-size:.95rem;font-weight:700;margin-bottom:16px;}
+.modal label{font-size:.73rem;color:var(--muted);display:block;margin-bottom:5px;}
+.modal input[type=text]{width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.88rem;font-family:var(--font);color:var(--text);outline:none;margin-bottom:14px;transition:border .12s;}
+.modal input[type=text]:focus{border-color:var(--blue);}
+.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .12s;}
+.color-swatch.selected{border-color:#fff;transform:scale(1.15);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-cancel{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:8px 14px;border-radius:8px;font-size:.82rem;font-family:var(--font);cursor:pointer;}
+.modal-save{background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;font-family:var(--font);cursor:pointer;}
+
+/* ══ READING VIEW ══ */
+.reading-view{flex-direction:column;overflow:hidden;}
+.reading-topbar{flex-shrink:0;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.reading-tabs{display:flex;gap:4px;}
+.rtab{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:.78rem;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.rtab:hover{background:var(--surface2);color:var(--text);}
+.rtab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.reading-controls{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;}
+.level-pills{display:flex;gap:4px;}
+.level-pill{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;}
+.level-pill:hover{border-color:var(--border2);color:var(--text);}
+.level-pill.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+.reading-body{flex:1;overflow-y:auto;padding:20px;position:relative;}
+
+/* Article */
+.article-panel{max-width:720px;margin:0 auto;}
+.article-placeholder{text-align:center;padding:60px 20px;color:var(--muted);}
+.ap-icon{font-size:3rem;margin-bottom:14px;opacity:.6;}
+.ap-title{font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:8px;}
+.ap-sub{font-size:.85rem;line-height:1.7;margin-bottom:18px;}
+.ap-features{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.ap-features span{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.75rem;color:var(--muted2);}
+
+.article-loading{text-align:center;padding:60px 20px;}
+.ai-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-loading-text{color:var(--muted);font-size:.85rem;}
+
+.article-header{margin-bottom:20px;}
+.article-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.article-level-badge{padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;letter-spacing:.8px;background:var(--purple);color:#fff;}
+.article-type-badge{padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;background:var(--surface2);color:var(--muted2);border:1px solid var(--border);}
+.article-wc{font-size:.72rem;color:var(--muted);font-family:var(--mono);}
+.article-title{font-size:1.3rem;font-weight:700;line-height:1.4;color:var(--text);margin-bottom:12px;}
+.article-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.article-text{font-size:.95rem;line-height:1.85;color:#d0d8f0;}
+.article-text p{margin-bottom:1em;}
+.clickable-word{cursor:pointer;border-radius:3px;padding:0 1px;transition:background .12s;display:inline;}
+.clickable-word:hover{background:rgba(93,114,255,.25);color:#fff;}
+.clickable-word.highlighted{background:rgba(93,114,255,.35);color:#fff;}
+
+.article-vocab{margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;border:1px solid var(--border);}
+.vocab-title{font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.vocab-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.vocab-chip{padding:5px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);font-size:.78rem;cursor:pointer;transition:all .15s;}
+.vocab-chip:hover{border-color:var(--blue);color:var(--blue2);}
+
+/* Word popup */
+.word-popup{position:fixed;z-index:400;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:16px;width:300px;box-shadow:0 16px 48px rgba(0,0,0,.5);animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.wp-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.wp-word{font-size:1.15rem;font-weight:700;color:var(--text);}
+.wp-phonetic{font-size:.75rem;color:var(--muted);font-style:italic;}
+.wp-speak{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--muted2);padding:2px;}
+.wp-speak:hover{color:var(--text);}
+.wp-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.9rem;padding:2px 4px;border-radius:4px;}
+.wp-close:hover{color:var(--red);}
+.wp-type{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;background:var(--navy3);color:var(--blue2);border-radius:4px;padding:2px 7px;margin-bottom:8px;}
+.wp-def{font-size:.85rem;color:var(--text);line-height:1.5;margin-bottom:6px;}
+.wp-tr{font-size:.82rem;color:var(--green);font-weight:600;margin-bottom:8px;}
+.wp-example{font-size:.78rem;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;line-height:1.5;}
+.wp-actions{display:flex;gap:6px;}
+
+/* ══ MOBILE ══ */
+@media(max-width:780px){
+  .reading-topbar{padding:10px 12px;gap:8px;}
+  .reading-controls{margin-left:0;width:100%;}
+  .reading-body{padding:14px;}
+  .word-popup{width:calc(100vw - 28px);left:14px!important;right:14px!important;}
+  .article-title{font-size:1.1rem;}
+  .article-text{font-size:.9rem;}
+}
+@media(max-width:780px){
+  .sidebar{transform:translateX(-220px);}
+  .sidebar.open{transform:translateX(0);box-shadow:8px 0 32px rgba(0,0,0,.5);}
+  .main{margin-left:0;}
+  .menu-toggle{display:block;}
+  .search-wrap input{width:130px;}
+  .search-wrap input:focus{width:160px;}
+  .speed-wrap,.btn-ghost{display:none;}
+  .dict-panel{display:none;}
+  .dict-panel.mobile-open{display:flex;position:fixed;inset:0;z-index:300;width:100%;}
+  .col-tr,thead th.col-tr{display:none;}
+  .stats-bar{padding:7px 12px;gap:10px;}
+  td,thead th{padding:5px 8px;}
+  .topbar{padding:0 12px;gap:8px;}
+  .flashcard-view,.progress-view{padding:16px;}
+  .fc-card-wrap{max-width:100%;}
+  .fc-quiz-opts{grid-template-columns:1fr;}
+}
+.sidebar-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.4);}
+.sidebar-overlay.open{display:block;}
+.dict-fab{display:none;position:fixed;right:16px;bottom:20px;z-index:400;width:50px;height:50px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 6px 20px rgba(61,90,254,.4);align-items:center;justify-content:center;}
+@media(max-width:780px){.dict-fab{display:flex;}}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon">🗣</div>
+      <div>
+        <div class="logo-name">PhraseMate</div>
+        <div class="logo-sub">İNG · TÜR</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-stats">
+    <div class="sstat">
+      <div class="sstat-val learned-val" id="ss-learned">0</div>
+      <div class="sstat-label">Öğrenildi ✓</div>
+    </div>
+    <div class="sstat">
+      <div class="sstat-val streak-val" id="ss-streak">0🔥</div>
+      <div class="sstat-label">Günlük seri</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="sidebar-label">Görünüm</div>
+    <button class="nav-item active-nav" id="nav-table" onclick="switchView('table')">
+      <span class="nav-icon">📋</span> Cümleler
+    </button>
+    <button class="nav-item" id="nav-flashcard" onclick="switchView('flashcard')">
+      <span class="nav-icon">🃏</span> Flashcard
+    </button>
+    <button class="nav-item" id="nav-progress" onclick="switchView('progress')">
+      <span class="nav-icon">📊</span> İlerleme
+    </button>
+    <button class="nav-item" id="nav-reading" onclick="switchView('reading')">
+      <span class="nav-icon">📖</span> Okuma
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Kategoriler</div>
+    <div id="cat-nav"></div>
+  </div>
+  <button class="add-cat-btn" onclick="openCatModal()">＋ Kategori Ekle</button>
+
+  <div class="sidebar-footer">PhraseMate · Veriler tarayıcıya kaydedilir</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbar-title">Cümleler</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Ara..." id="search-input" oninput="filterTable()" />
+    </div>
+    <div class="speed-wrap">🎚
+      <select id="speed-select">
+        <option value="0.7">Yavaş</option>
+        <option value="1" selected>Normal</option>
+        <option value="1.3">Hızlı</option>
+      </select>
+    </div>
+    <button class="btn btn-green" id="speak-all-btn" onclick="speakAll()">▶ Tümünü Oku</button>
+    <button class="btn btn-ghost" id="dict-toggle-btn" onclick="toggleDictDesktop()">📖 Sözlük</button>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div class="view table-view active" id="view-table">
+    <div class="content">
+      <div class="table-area">
+        <div class="stats-bar">
+          <div class="stat-item"><strong id="stat-total">0</strong> cümle</div>
+          <div class="stat-item"><strong id="stat-learned-bar">0</strong> öğrenildi</div>
+          <div class="stat-item"><strong id="stat-cats">0</strong> kategori</div>
+          <div class="stat-item" id="stat-filter-wrap" style="display:none"><strong id="stat-filtered">0</strong> gösteriliyor</div>
+        </div>
+        <div class="table-scroll">
+          <table id="phrase-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-learned" title="Öğrendim işaretle">✓</th>
+                <th class="col-cat">Kategori</th>
+                <th class="col-en">İngilizce</th>
+                <th class="col-tr">Türkçe</th>
+                <th class="col-act">Ses</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="phrase-body"></tbody>
+            <tfoot>
+              <tr class="add-row">
+                <td></td><td></td>
+                <td><select class="cat-select" id="add-cat-sel" style="max-width:100%"></select></td>
+                <td><input class="add-cell-input en-cell" id="add-en" placeholder="İngilizce cümle..." type="text"/></td>
+                <td><input class="add-cell-input" id="add-tr" placeholder="Türkçe karşılığı..." type="text"/></td>
+                <td colspan="2" style="text-align:center">
+                  <button class="add-inline-btn" onclick="addRow()">＋ Ekle</button>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="dict-panel" id="dict-panel">
+        <div class="dict-head">
+          <div class="dict-head-top">
+            <div class="dict-logo">AI SÖZLÜK</div>
+            <span class="dict-title-text">İNG ↔ TÜR</span>
+            <button onclick="closeDictPanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;">✕</button>
+          </div>
+          <div class="dict-search-row">
+            <input id="dict-input" type="text" placeholder="Kelime ara..."/>
+            <button class="dict-search-btn" onclick="searchWord()">Ara</button>
+          </div>
+        </div>
+        <div class="dict-body" id="dict-body-wrap">
+          <div class="dict-placeholder" id="dict-placeholder">
+            <div class="dicon">🔍</div>
+            <div>Kelime yazın,<br><strong>Ara</strong>'ya basın.</div>
+            <div style="font-size:.72rem;margin-top:8px;color:var(--muted);">AI destekli · Türkçe anlam<br>telaffuz · örnek cümleler</div>
+          </div>
+          <div id="dict-loading" style="display:none;text-align:center;padding:40px 20px;">
+            <div class="ai-spinner"></div>
+            <div style="font-size:.8rem;color:var(--muted);margin-top:10px;">Aranıyor...</div>
+          </div>
+          <div id="dict-result" style="display:none;overflow-y:auto;height:100%;padding:14px;"></div>
+        </div>
+        <div class="dict-tip">⚡ Free Dictionary API + Claude AI</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLASHCARD VIEW -->
+  <div class="view flashcard-view" id="view-flashcard">
+    <div class="fc-controls">
+      <select id="fc-cat-filter" onchange="initFlashcards()">
+        <option value="all">Tüm Kategoriler</option>
+      </select>
+      <select id="fc-direction" onchange="initFlashcards()">
+        <option value="en-tr">İngilizce → Türkçe</option>
+        <option value="tr-en">Türkçe → İngilizce</option>
+      </select>
+      <div class="fc-mode-btns">
+        <button class="fc-mode-btn active" id="fcm-flip" onclick="setFcMode('flip')">🃏 Kart</button>
+        <button class="fc-mode-btn" id="fcm-quiz" onclick="setFcMode('quiz')">🧠 Quiz</button>
+      </div>
+      <button class="btn btn-ghost" onclick="initFlashcards()">🔀 Karıştır</button>
+    </div>
+    <div class="fc-progress-bar"><div class="fc-progress-fill" id="fc-prog-fill" style="width:0%"></div></div>
+    <div class="fc-card-wrap" id="fc-card-wrap" onclick="flipCard()">
+      <div class="fc-card" id="fc-card">
+        <div class="fc-face fc-front" id="fc-front">
+          <div class="fc-face-label" id="fc-front-label">İngilizce</div>
+          <div class="fc-face-text en-text" id="fc-front-text">Başlamak için Karıştır'a bas</div>
+          <div class="fc-cat-tag" id="fc-front-cat"></div>
+        </div>
+        <div class="fc-face fc-back" id="fc-back">
+          <div class="fc-face-label" id="fc-back-label">Türkçe</div>
+          <div class="fc-face-text" id="fc-back-text"></div>
+          <button class="btn btn-green" style="margin-top:16px;font-size:.78rem;" onclick="event.stopPropagation();markLearned()">✓ Öğrendim</button>
+        </div>
+      </div>
+    </div>
+    <div class="fc-flip-hint" id="fc-flip-hint">Kartı çevirmek için tıkla</div>
+    <div class="fc-quiz-opts" id="fc-quiz-opts" style="display:none"></div>
+    <div class="fc-nav">
+      <button class="fc-nav-btn" id="fc-prev" onclick="fcNav(-1)">← Geri</button>
+      <div class="fc-counter" id="fc-counter">0 / 0</div>
+      <button class="fc-nav-btn" id="fc-next" onclick="fcNav(1)">İleri →</button>
+    </div>
+    <div class="fc-result" id="fc-result" style="display:none">
+      <div class="fc-result-icon">🎉</div>
+      <div class="fc-result-title">Tur Tamamlandı!</div>
+      <div class="fc-result-score" id="fc-result-score"></div>
+      <div class="fc-result-sub" id="fc-result-sub"></div>
+      <button class="btn btn-purple" style="margin-top:16px;" onclick="initFlashcards()">🔀 Tekrar</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS VIEW -->
+  <div class="view progress-view" id="view-progress">
+    <div class="prog-grid" id="prog-grid"></div>
+    <div class="prog-section-title">Kategoriye Göre İlerleme</div>
+    <div class="cat-progress-list" id="cat-progress-list"></div>
+    <div class="prog-section-title">Öğrenilen Cümleler</div>
+    <div class="learned-list-wrap">
+      <div class="learned-list" id="learned-list"></div>
+    </div>
+  </div>
+
+  <!-- READING VIEW -->
+  <div class="view reading-view" id="view-reading">
+    <!-- Controls bar -->
+    <div class="reading-topbar">
+      <div class="reading-tabs">
+        <button class="rtab active" id="rtab-stories" onclick="setReadTab('stories')">📚 Hikayeler</button>
+        <button class="rtab" id="rtab-biographies" onclick="setReadTab('biographies')">🧑‍💼 Biyografiler</button>
+        <button class="rtab" id="rtab-quotes" onclick="setReadTab('quotes')">💬 Alıntılar</button>
+      </div>
+      <div class="reading-controls">
+        <div class="level-pills">
+          <button class="level-pill active" data-level="A1" onclick="setLevel('A1')">A1</button>
+          <button class="level-pill" data-level="A2" onclick="setLevel('A2')">A2</button>
+          <button class="level-pill" data-level="B1" onclick="setLevel('B1')">B1</button>
+          <button class="level-pill" data-level="B2" onclick="setLevel('B2')">B2</button>
+          <button class="level-pill" data-level="C1" onclick="setLevel('C1')">C1</button>
+        </div>
+        <button class="btn btn-primary" onclick="loadContent()" id="gen-btn">✨ Üret</button>
+      </div>
+    </div>
+
+    <div class="reading-body">
+      <!-- Article panel -->
+      <div class="article-panel" id="article-panel">
+        <div class="article-placeholder" id="article-placeholder">
+          <div class="ap-icon">✨</div>
+          <div class="ap-title">İçerik Üret</div>
+          <div class="ap-sub">Seviye ve tür seç, <strong>Üret</strong> butonuna bas.<br>Kelimelere tıklayarak anlamlarını öğren.</div>
+          <div class="ap-features">
+            <span>🔊 Sesli Oku</span>
+            <span>💡 Kelime Popup</span>
+            <span>➕ Listeye Ekle</span>
+          </div>
+        </div>
+        <div id="article-loading" style="display:none" class="article-loading">
+          <div class="ai-spinner"></div>
+          <div class="ai-loading-text" id="ai-loading-text">İçerik hazırlanıyor...</div>
+        </div>
+        <div id="article-content" style="display:none">
+          <div class="article-header">
+            <div class="article-meta">
+              <span class="article-level-badge" id="art-level-badge">B1</span>
+              <span class="article-type-badge" id="art-type-badge">Hikaye</span>
+              <span class="article-wc" id="art-wc"></span>
+            </div>
+            <h2 class="article-title" id="art-title"></h2>
+            <div class="article-actions">
+              <button class="btn btn-ghost" id="art-speak-btn" onclick="toggleArticleSpeech()">🔊 Sesli Oku</button>
+              <button class="btn btn-ghost" onclick="loadContent()">🔄 Yenile</button>
+            </div>
+          </div>
+          <div class="article-text" id="art-text"></div>
+          <div class="article-vocab" id="art-vocab" style="display:none">
+            <div class="vocab-title">📝 Bu İçerikteki Anahtar Kelimeler</div>
+            <div class="vocab-chips" id="vocab-chips"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word popup (fixed) -->
+      <div class="word-popup" id="word-popup" style="display:none">
+        <div class="wp-header">
+          <div>
+            <div class="wp-word" id="wp-word"></div>
+            <div class="wp-phonetic" id="wp-phonetic"></div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="wp-speak" onclick="speakPopupWord()" title="Seslendir">🔊</button>
+            <button class="wp-close" onclick="closeWordPopup()">✕</button>
+          </div>
+        </div>
+        <div class="wp-type" id="wp-type"></div>
+        <div class="wp-def" id="wp-def"></div>
+        <div class="wp-tr" id="wp-tr"></div>
+        <div class="wp-example" id="wp-example"></div>
+        <div class="wp-actions">
+          <button class="btn btn-primary" style="font-size:.72rem;padding:6px 11px;" onclick="addWordToList()">➕ Listeye Ekle</button>
+          <button class="btn btn-ghost" style="font-size:.72rem;padding:6px 11px;" onclick="searchPopupWord()">📖 Sözlük</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .main -->
+
+<button class="dict-fab" onclick="toggleDictMobile()">📖</button>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="catModal">
+  <div class="modal">
+    <h3>Yeni Kategori</h3>
+    <label>Kategori Adı</label>
+    <input type="text" id="modal-cat-name" placeholder="örn: Seyahat" maxlength="20"/>
+    <label>Renk</label>
+    <div class="color-picker-row" id="color-swatches"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeCatModal()">İptal</button>
+      <button class="modal-save" onclick="saveCategory()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  DATA & STORAGE
+// ══════════════════════════════════════
+const PALETTE=['#3d5afe','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16','#6366f1'];
+const STORAGE_KEY='phrasemate_v1';
+
+const DEFAULT_CATS=[
+  {id:'all',name:'Tüm Cümleler',color:'#7888b4'},
+  {id:'gunluk',name:'Günlük',color:'#10b981'},
+  {id:'is',name:'İş',color:'#3d5afe'},
+  {id:'seyahat',name:'Seyahat',color:'#f59e0b'},
+  {id:'sosyal',name:'Sosyal',color:'#ec4899'},
+];
+const DEFAULT_PHRASES=[
+  {id:1,cat:'gunluk',en:'How are you doing?',tr:'Nasılsınız?',learned:false},
+  {id:2,cat:'sosyal',en:'Nice to meet you.',tr:'Tanıştığımıza memnun oldum.',learned:false},
+  {id:3,cat:'gunluk',en:'Could you please repeat that?',tr:'Tekrar edebilir misiniz?',learned:false},
+  {id:4,cat:'is',en:"Let's schedule a meeting.",tr:'Bir toplantı ayarlayalım.',learned:false},
+  {id:5,cat:'seyahat',en:'Where is the nearest hotel?',tr:'En yakın otel nerede?',learned:false},
+  {id:6,cat:'is',en:"I'll send you the report by Friday.",tr:"Raporu Cuma'ya kadar göndereceğim.",learned:false},
+  {id:7,cat:'seyahat',en:'Can I have the bill, please?',tr:'Hesabı alabilir miyim, lütfen?',learned:false},
+  {id:8,cat:'gunluk',en:'What time does it open?',tr:'Kaçta açılıyor?',learned:false},
+  {id:9,cat:'sosyal',en:'Would you like to grab a coffee?',tr:'Bir kahve içmek ister misin?',learned:false},
+  {id:10,cat:'is',en:'Please find the attached document.',tr:'Ekteki belgeyi inceleyiniz.',learned:false},
+];
+
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const d=JSON.parse(raw);return d;}
+  }catch(e){}
+  return null;
+}
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({
+      categories,phrases,nextId,streak,lastStudyDate,learnedToday
+    }));
+  }catch(e){}
+}
+
+let categories,phrases,nextId,streak,lastStudyDate,learnedToday;
+const saved=loadData();
+if(saved){
+  categories=saved.categories||DEFAULT_CATS;
+  phrases=saved.phrases||DEFAULT_PHRASES;
+  nextId=saved.nextId||100;
+  streak=saved.streak||0;
+  lastStudyDate=saved.lastStudyDate||null;
+  learnedToday=saved.learnedToday||0;
+} else {
+  categories=[...DEFAULT_CATS];
+  phrases=DEFAULT_PHRASES.map(p=>({...p}));
+  nextId=11; streak=0; lastStudyDate=null; learnedToday=0;
+}
+
+function today(){ return new Date().toISOString().slice(0,10); }
+function updateStreak(){
+  const t=today();
+  if(lastStudyDate===t) return;
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yStr=yesterday.toISOString().slice(0,10);
+  if(lastStudyDate===yStr) streak++;
+  else if(lastStudyDate!==t) streak=1;
+  lastStudyDate=t; learnedToday=0;
+  saveData();
+}
+
+// ══ UTILS ══
+function getCat(id){return categories.find(c=>c.id===id)||categories[1]||categories[0];}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function uid(){return'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ══ VIEWS ══
+let currentView='table';
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active-nav'));
+  document.getElementById('nav-'+v).classList.add('active-nav');
+  const titles={table:'Cümleler',flashcard:'Flashcard',progress:'İlerleme',reading:'Okuma & Dinleme'};
+  document.getElementById('topbar-title').textContent=titles[v]||v;
+  const showTopBtns=v==='table';
+  document.getElementById('speak-all-btn').style.display=showTopBtns?'':'none';
+  document.getElementById('dict-toggle-btn').style.display=showTopBtns?'':'none';
+  document.getElementById('search-input').closest('.search-wrap').style.display=showTopBtns?'':'none';
+  if(v==='progress') renderProgress();
+  if(v==='flashcard') renderFcCatFilter();
+  if(v==='reading') stopArticleSpeech();
+  closeSidebar();
+}
+
+// ══ SIDEBAR ══
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open');}
+
+// ══ RENDER SIDEBAR ══
+let activeFilter='all';
+function renderSidebar(){
+  // stats
+  const lc=phrases.filter(p=>p.learned).length;
+  document.getElementById('ss-learned').textContent=lc;
+  document.getElementById('ss-streak').textContent=streak+'🔥';
+  // cat nav
+  const nav=document.getElementById('cat-nav');
+  nav.innerHTML='';
+  categories.forEach(c=>{
+    const count=c.id==='all'?phrases.length:phrases.filter(p=>p.cat===c.id).length;
+    const btn=document.createElement('button');
+    btn.className='cat-item'+(c.id===activeFilter?' active':'');
+    btn.innerHTML=`<span class="cat-dot" style="background:${c.color}"></span>${esc(c.name)}<span class="cat-count">${count}</span>`;
+    btn.onclick=()=>{activeFilter=c.id;renderAll();closeSidebar();};
+    nav.appendChild(btn);
+  });
+}
+
+function renderCatSelect(sel,cur){
+  sel.innerHTML='';
+  categories.filter(c=>c.id!=='all').forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id;o.textContent=c.name;if(c.id===cur)o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+// ══ TABLE ══
+function renderTable(){
+  const body=document.getElementById('phrase-body');
+  body.innerHTML='';
+  const list=activeFilter==='all'?phrases:phrases.filter(p=>p.cat===activeFilter);
+  const q=document.getElementById('search-input').value.trim().toLowerCase();
+  let vis=0;
+  list.forEach((p,i)=>{
+    const match=!q||p.en.toLowerCase().includes(q)||p.tr.toLowerCase().includes(q);
+    const tr=document.createElement('tr');
+    if(!match)tr.classList.add('filtered-out');else vis++;
+    const cat=getCat(p.cat);
+    tr.innerHTML=`
+      <td>${i+1}</td>
+      <td class="learned-check">
+        <button class="learn-btn${p.learned?' learned':''}" onclick="toggleLearned(${p.id})" title="${p.learned?'Öğrenildi':'Öğren'}">✓</button>
+      </td>
+      <td><span class="cat-badge" onclick="startCatEdit(${p.id},this)">
+        <span class="dot" style="background:${cat.color}"></span>${esc(cat.name)}</span></td>
+      <td><input class="cell-input en-cell" value="${esc(p.en)}" placeholder="İngilizce..."
+        onchange="updateP(${p.id},'en',this.value)" onclick="quickSearch(this.value)" title="Sözlükte ara"/></td>
+      <td><input class="cell-input" value="${esc(p.tr)}" placeholder="Türkçe..."
+        onchange="updateP(${p.id},'tr',this.value)"/></td>
+      <td style="text-align:center"><button class="speak-btn" id="sbtn-${p.id}" onclick="speak(${p.id})">🔊 Dinle</button></td>
+      <td><button class="del-btn" onclick="deleteP(${p.id})">✕</button></td>`;
+    body.appendChild(tr);
+  });
+  // stats bar
+  const lc=phrases.filter(p=>p.learned).length;
+  document.getElementById('stat-total').textContent=phrases.length;
+  document.getElementById('stat-learned-bar').textContent=lc;
+  document.getElementById('stat-cats').textContent=categories.length-1;
+  if(q){document.getElementById('stat-filter-wrap').style.display='';document.getElementById('stat-filtered').textContent=vis;}
+  else document.getElementById('stat-filter-wrap').style.display='none';
+}
+
+function renderAddRow(){renderCatSelect(document.getElementById('add-cat-sel'),categories.find(c=>c.id!=='all')?.id||'');}
+function renderAll(){renderSidebar();renderTable();renderAddRow();}
+
+function startCatEdit(id,el){
+  const p=phrases.find(x=>x.id===id);if(!p)return;
+  const td=el.parentElement;
+  const sel=document.createElement('select');sel.className='cat-select';
+  renderCatSelect(sel,p.cat);
+  sel.onchange=()=>{p.cat=sel.value;saveData();renderAll();};
+  sel.onblur=()=>renderAll();
+  td.innerHTML='';td.appendChild(sel);sel.focus();
+}
+
+function updateP(id,f,v){const p=phrases.find(x=>x.id===id);if(p){p[f]=v;saveData();renderSidebar();}}
+function deleteP(id){stopSpeaking();phrases=phrases.filter(p=>p.id!==id);saveData();renderAll();}
+
+function toggleLearned(id){
+  const p=phrases.find(x=>x.id===id);if(!p)return;
+  p.learned=!p.learned;
+  if(p.learned){updateStreak();learnedToday++;saveData();}
+  else saveData();
+  renderAll();
+}
+
+function addRow(){
+  const en=document.getElementById('add-en').value.trim();
+  const tr=document.getElementById('add-tr').value.trim();
+  const cat=document.getElementById('add-cat-sel').value;
+  if(!en){document.getElementById('add-en').focus();return;}
+  phrases.push({id:nextId++,cat,en,tr,learned:false});
+  saveData();
+  document.getElementById('add-en').value='';
+  document.getElementById('add-tr').value='';
+  renderAll();
+  const sc=document.querySelector('.table-scroll');if(sc)sc.scrollTop=sc.scrollHeight;
+}
+
+function filterTable(){renderTable();}
+
+// ══ SPEECH ══
+let speakingId=null;
+let speakQ=[];
+function getSpeed(){return parseFloat(document.getElementById('speed-select').value);}
+function stopSpeaking(){
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+  if(speakingId!==null){const b=document.getElementById('sbtn-'+speakingId);if(b){b.textContent='🔊 Dinle';b.classList.remove('playing');}speakingId=null;}
+  speakQ=[];
+}
+function speak(id){
+  if(!window.speechSynthesis)return;
+  if(speakingId===id){stopSpeaking();return;}
+  stopSpeaking();
+  const p=phrases.find(x=>x.id===id);if(!p||!p.en)return;
+  const btn=document.getElementById('sbtn-'+id);
+  if(btn){btn.textContent='⏹ Dur';btn.classList.add('playing');}speakingId=id;
+  const u=new SpeechSynthesisUtterance(p.en);
+  u.lang='en-US';u.rate=getSpeed();
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+  u.onend=u.onerror=()=>{if(btn){btn.textContent='🔊 Dinle';btn.classList.remove('playing');}speakingId=null;};
+  window.speechSynthesis.speak(u);
+}
+function speakAll(){
+  if(!window.speechSynthesis)return;
+  stopSpeaking();
+  speakQ=Array.from(document.querySelectorAll('#phrase-body tr:not(.filtered-out) .en-cell')).map(el=>el.value.trim()).filter(Boolean);
+  speakNext();
+}
+function speakNext(){
+  if(!speakQ.length)return;
+  const text=speakQ.shift();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=getSpeed();
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+  u.onend=()=>setTimeout(speakNext,500);
+  window.speechSynthesis.speak(u);
+}
+function speakText(text){
+  if(!window.speechSynthesis||!text)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=getSpeed();
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+  window.speechSynthesis.speak(u);
+}
+
+// ══ DICTIONARY — Free Dictionary API + MyMemory (100% ücretsiz & sınırsız) ══
+let dictOpen=true;
+
+function quickSearch(text){
+  if(!dictOpen&&window.innerWidth>780)openDictPanel();
+  const word=text.trim().split(/\s+/)[0];if(!word)return;
+  document.getElementById('dict-input').value=word;
+  if(window.innerWidth<=780)toggleDictMobile();
+  searchWord();
+}
+
+async function searchWord(){
+  const q=document.getElementById('dict-input').value.trim();
+  if(!q)return;
+  document.getElementById('dict-placeholder').style.display='none';
+  document.getElementById('dict-result').style.display='none';
+  document.getElementById('dict-loading').style.display='block';
+
+  try{
+    // 1) Free Dictionary API — tanım, telaffuz, ses, eş anlamlı (sınırsız, ücretsiz)
+    let freeDictData=null;
+    try{
+      const r=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(q)}`);
+      if(r.ok) freeDictData=await r.json();
+    }catch(e){}
+
+    // 2) MyMemory Translation API — Türkçe çeviri (günde 5000, ücretsiz, API key gerekmez)
+    let turkish='';
+    try{
+      const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=en|tr`);
+      const trData=await tr.json();
+      if(trData.responseStatus===200){
+        turkish=trData.responseData?.translatedText||'';
+        // MyMemory bazen İngilizce döndürür, kontrol et
+        if(turkish.toLowerCase()===q.toLowerCase()) turkish='';
+        // Alternatif çeviriler de al
+        const alts=(trData.matches||[])
+          .filter(m=>m.translation&&m.translation.toLowerCase()!==q.toLowerCase())
+          .slice(0,3).map(m=>m.translation);
+        if(alts.length&&!turkish) turkish=alts[0];
+      }
+    }catch(e){}
+
+    document.getElementById('dict-loading').style.display='none';
+    renderDictResult(q, freeDictData, turkish);
+
+  }catch(e){
+    document.getElementById('dict-loading').style.display='none';
+    document.getElementById('dict-placeholder').style.display='block';
+    document.getElementById('dict-placeholder').innerHTML=`<div class="dicon">⚠️</div><div>Bir hata oluştu</div><div style="font-size:.72rem;margin-top:6px;color:var(--muted)">${e.message}</div>`;
+  }
+}
+
+function renderDictResult(word, freeDict, turkish){
+  const el=document.getElementById('dict-result');
+  el.style.display='block';
+
+  const entry=freeDict?.[0]||null;
+  const phonetic=entry?.phonetic||entry?.phonetics?.find(p=>p.text)?.text||'';
+  const audioUrl=entry?.phonetics?.find(p=>p.audio&&p.audio.startsWith('http'))?.audio||
+                 entry?.phonetics?.find(p=>p.audio)?.audio||'';
+  const meanings=entry?.meanings||[];
+
+  // Tüm eş anlamlıları topla
+  const allSynonyms=[...new Set(meanings.flatMap(m=>m.synonyms||[]).concat(meanings.flatMap(m=>m.definitions||[]).flatMap(d=>d.synonyms||[])))].slice(0,6);
+  const allAntonyms=[...new Set(meanings.flatMap(m=>m.antonyms||[]).concat(meanings.flatMap(m=>m.definitions||[]).flatMap(d=>d.antonyms||[])))].slice(0,4);
+
+  let html=`<div style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-size:1.25rem;font-weight:700;color:var(--text);">${esc(word)}</span>
+      ${phonetic?`<span style="font-size:.78rem;color:var(--muted);font-style:italic;">${esc(phonetic)}</span>`:''}
+      ${audioUrl
+        ?`<button onclick="playAudio('${audioUrl.replace(/'/g,"\\'")}')" style="background:var(--blue);border:none;border-radius:6px;padding:3px 9px;color:#fff;cursor:pointer;font-size:.72rem;">🔊 Dinle</button>`
+        :`<button onclick="speakDictWord('${esc(word)}')" style="background:var(--blue);border:none;border-radius:6px;padding:3px 9px;color:#fff;cursor:pointer;font-size:.72rem;">🔊 TTS</button>`
+      }
+    </div>`;
+
+  // Türkçe anlam kutusu
+  if(turkish){
+    html+=`<div style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:9px;padding:10px 13px;margin-bottom:12px;">
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--green);margin-bottom:4px;">🇹🇷 Türkçe Anlam</div>
+      <div style="font-size:.95rem;color:var(--text);font-weight:600;">${esc(turkish)}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // İngilizce tanımlar
+  if(meanings.length){
+    meanings.slice(0,3).forEach(m=>{
+      const defs=m.definitions||[];
+      if(!defs.length)return;
+      html+=`<div style="margin-bottom:12px;">
+        <div style="font-size:.63rem;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--blue2);border-left:3px solid var(--blue);padding-left:8px;margin-bottom:7px;">${esc(m.partOfSpeech||'')}</div>`;
+      defs.slice(0,2).forEach(d=>{
+        html+=`<div style="background:var(--surface);border-radius:8px;padding:9px 11px;margin-bottom:6px;">
+          <div style="font-size:.82rem;color:var(--text);line-height:1.5;margin-bottom:${d.example?'5px':'0'}">${esc(d.definition||'')}</div>
+          ${d.example?`<div style="font-size:.75rem;color:var(--muted);font-style:italic;border-top:1px solid var(--border);padding-top:5px;">"${esc(d.example)}"</div>`:''}
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+  } else if(!turkish){
+    html+=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem;">Bu kelime için tanım bulunamadı.</div>`;
+  }
+
+  // Eş / Zıt anlamlılar (Free Dict'ten)
+  if(allSynonyms.length||allAntonyms.length){
+    html+=`<div style="margin-bottom:12px;">
+      <div style="font-size:.63rem;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">Eş / Zıt Anlamlılar</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+    allSynonyms.forEach(s=>{html+=`<span style="background:rgba(61,90,254,.15);border:1px solid rgba(61,90,254,.3);border-radius:20px;padding:3px 9px;font-size:.72rem;color:var(--blue2);cursor:pointer;" onclick="document.getElementById('dict-input').value='${esc(s)}';searchWord()">≈ ${esc(s)}</span>`;});
+    allAntonyms.forEach(a=>{html+=`<span style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:20px;padding:3px 9px;font-size:.72rem;color:#f87171;cursor:pointer;" onclick="document.getElementById('dict-input').value='${esc(a)}';searchWord()">≠ ${esc(a)}</span>`;});
+    html+=`</div></div>`;
+  }
+
+  // Listeye ekle butonu
+  const safeWord=word.replace(/'/g,"\\'");
+  const safeTr=(turkish||'').replace(/'/g,"\\'");
+  html+=`<button onclick="addDictWordToList('${safeWord}','${safeTr}')"
+    style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px;font-size:.8rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:6px;transition:opacity .15s;">
+    ➕ Listeye Ekle
+  </button>
+  <div style="text-align:center;margin-top:8px;font-size:.65rem;color:var(--muted);">
+    Free Dictionary API · MyMemory Translation · %100 Ücretsiz
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+function playAudio(url){
+  try{ new Audio(url).play(); }catch(e){ speakDictWord(document.getElementById('dict-input').value); }
+}
+function speakDictWord(word){
+  if(!word||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(word);u.lang='en-US';
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+  window.speechSynthesis.speak(u);
+}
+function addDictWordToList(en,tr){
+  const cat=categories.find(c=>c.id!=='all')?.id||'';
+  phrases.push({id:nextId++,cat,en,tr,learned:false});
+  saveData();renderAll();
+  const btn=document.querySelector('#dict-result button:last-child');
+  if(btn){btn.textContent='✓ Eklendi!';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent='➕ Listeye Ekle';btn.style.background='';},1500);}
+}
+function openDictPanel(){dictOpen=true;document.getElementById('dict-panel').style.display='';}
+function closeDictPanel(){dictOpen=false;document.getElementById('dict-panel').style.display='none';document.getElementById('dict-panel').classList.remove('mobile-open');}
+function toggleDictDesktop(){if(dictOpen)closeDictPanel();else openDictPanel();}
+function toggleDictMobile(){document.getElementById('dict-panel').classList.toggle('mobile-open');}
+
+// ══════════════════════════════════════
+//  FLASHCARD
+// ══════════════════════════════════════
+let fcDeck=[],fcIdx=0,fcFlipped=false,fcMode='flip',fcDirection='en-tr';
+let fcCorrect=0,fcAnswered=0;
+
+function renderFcCatFilter(){
+  const sel=document.getElementById('fc-cat-filter');
+  sel.innerHTML='<option value="all">Tüm Kategoriler</option>';
+  categories.filter(c=>c.id!=='all').forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);
+  });
+}
+
+function setFcMode(m){
+  fcMode=m;
+  document.getElementById('fcm-flip').classList.toggle('active',m==='flip');
+  document.getElementById('fcm-quiz').classList.toggle('active',m==='quiz');
+  initFlashcards();
+}
+
+function initFlashcards(){
+  const catF=document.getElementById('fc-cat-filter').value;
+  fcDirection=document.getElementById('fc-direction').value;
+  let pool=catF==='all'?phrases:phrases.filter(p=>p.cat===catF);
+  pool=pool.filter(p=>p.en&&p.tr);
+  fcDeck=shuffle(pool);
+  fcIdx=0;fcFlipped=false;fcCorrect=0;fcAnswered=0;
+  document.getElementById('fc-result').style.display='none';
+  document.getElementById('fc-card-wrap').style.display='';
+  document.getElementById('fc-flip-hint').style.display=fcMode==='flip'?'':'none';
+  document.getElementById('fc-quiz-opts').style.display=fcMode==='quiz'?'grid':'none';
+  renderFcCard();
+}
+
+function renderFcCard(){
+  if(!fcDeck.length){document.getElementById('fc-counter').textContent='0 / 0';return;}
+  if(fcIdx>=fcDeck.length){showFcResult();return;}
+  const p=fcDeck[fcIdx];
+  const card=document.getElementById('fc-card');
+  card.classList.remove('flipped');fcFlipped=false;
+  const isEnTr=fcDirection==='en-tr';
+  const frontText=isEnTr?p.en:p.tr;
+  const backText=isEnTr?p.tr:p.en;
+  document.getElementById('fc-front-label').textContent=isEnTr?'İngilizce':'Türkçe';
+  document.getElementById('fc-back-label').textContent=isEnTr?'Türkçe':'İngilizce';
+  const ftEl=document.getElementById('fc-front-text');
+  ftEl.textContent=frontText;
+  ftEl.className='fc-face-text'+(isEnTr?' en-text':'');
+  document.getElementById('fc-back-text').textContent=backText;
+  const cat=getCat(p.cat);
+  document.getElementById('fc-front-cat').innerHTML=`<span style="width:6px;height:6px;border-radius:50%;background:${cat.color};display:inline-block"></span> ${esc(cat.name)}`;
+  // progress
+  const pct=fcDeck.length?((fcIdx)/fcDeck.length*100):0;
+  document.getElementById('fc-prog-fill').style.width=pct+'%';
+  document.getElementById('fc-counter').textContent=`${fcIdx+1} / ${fcDeck.length}`;
+  // auto speak front if en
+  if(isEnTr) setTimeout(()=>speakText(p.en),200);
+  // quiz opts
+  if(fcMode==='quiz') renderQuizOpts(p,isEnTr);
+  document.getElementById('fc-prev').disabled=fcIdx===0;
+  document.getElementById('fc-next').disabled=false;
+}
+
+function flipCard(){
+  if(fcMode==='quiz')return;
+  if(!fcDeck.length)return;
+  fcFlipped=!fcFlipped;
+  document.getElementById('fc-card').classList.toggle('flipped',fcFlipped);
+  if(fcFlipped){
+    const p=fcDeck[fcIdx];
+    if(fcDirection==='tr-en') speakText(p.en);
+  }
+}
+
+function fcNav(dir){
+  if(fcMode==='quiz')return;
+  fcIdx+=dir;
+  if(fcIdx<0)fcIdx=0;
+  if(fcIdx>=fcDeck.length){showFcResult();return;}
+  renderFcCard();
+}
+
+function markLearned(){
+  if(!fcDeck.length)return;
+  const p=fcDeck[fcIdx];
+  if(!p.learned){p.learned=true;updateStreak();learnedToday++;saveData();renderSidebar();}
+  fcIdx++;renderFcCard();
+}
+
+function renderQuizOpts(p,isEnTr){
+  const correct=isEnTr?p.tr:p.en;
+  let wrongs=phrases.filter(x=>x.id!==p.id&&(isEnTr?x.tr:x.en));
+  wrongs=shuffle(wrongs).slice(0,3).map(x=>isEnTr?x.tr:x.en);
+  const opts=shuffle([correct,...wrongs]);
+  const wrap=document.getElementById('fc-quiz-opts');
+  wrap.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='fc-quiz-opt';btn.textContent=opt;
+    btn.onclick=()=>answerQuiz(opt,correct,wrap);
+    wrap.appendChild(btn);
+  });
+}
+
+function answerQuiz(chosen,correct,wrap){
+  fcAnswered++;
+  const btns=wrap.querySelectorAll('.fc-quiz-opt');
+  btns.forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===correct)b.classList.add('show-correct');
+    else if(b.textContent===chosen&&chosen!==correct)b.classList.add('wrong');
+  });
+  if(chosen===correct){fcCorrect++;markLearnedQuiet();}
+  setTimeout(()=>{fcIdx++;renderFcCard();},900);
+}
+
+function markLearnedQuiet(){
+  if(!fcDeck.length)return;
+  const p=fcDeck[fcIdx];
+  if(!p.learned){p.learned=true;updateStreak();learnedToday++;saveData();}
+}
+
+function showFcResult(){
+  document.getElementById('fc-card-wrap').style.display='none';
+  document.getElementById('fc-flip-hint').style.display='none';
+  document.getElementById('fc-quiz-opts').style.display='none';
+  const r=document.getElementById('fc-result');r.style.display='';
+  if(fcMode==='quiz'){
+    const pct=fcAnswered?Math.round(fcCorrect/fcAnswered*100):0;
+    document.getElementById('fc-result-score').textContent=`${fcCorrect}/${fcAnswered} (%${pct})`;
+    document.getElementById('fc-result-sub').textContent=pct>=80?'Harika iş! 🌟':pct>=50?'İyi gidiyorsun 💪':'Biraz daha pratik yapalım 📚';
+  } else {
+    document.getElementById('fc-result-score').textContent=fcDeck.length+' kart';
+    document.getElementById('fc-result-sub').textContent='Turu tamamladın!';
+  }
+  document.getElementById('fc-prog-fill').style.width='100%';
+}
+
+// ══════════════════════════════════════
+//  PROGRESS
+// ══════════════════════════════════════
+function renderProgress(){
+  const lc=phrases.filter(p=>p.learned).length;
+  const total=phrases.length;
+  const pct=total?Math.round(lc/total*100):0;
+  document.getElementById('prog-grid').innerHTML=`
+    <div class="prog-card accent-green">
+      <div class="prog-card-icon">✅</div>
+      <div class="prog-card-val">${lc}</div>
+      <div class="prog-card-label">Öğrenilen cümle</div>
+    </div>
+    <div class="prog-card accent-yellow">
+      <div class="prog-card-icon">🔥</div>
+      <div class="prog-card-val">${streak}</div>
+      <div class="prog-card-label">Günlük seri</div>
+    </div>
+    <div class="prog-card accent-blue">
+      <div class="prog-card-icon">📋</div>
+      <div class="prog-card-val">${total}</div>
+      <div class="prog-card-label">Toplam cümle</div>
+    </div>
+    <div class="prog-card accent-purple">
+      <div class="prog-card-icon">🎯</div>
+      <div class="prog-card-val">%${pct}</div>
+      <div class="prog-card-label">Tamamlanma oranı</div>
+    </div>`;
+
+  // per category
+  const catList=document.getElementById('cat-progress-list');
+  catList.innerHTML='';
+  categories.filter(c=>c.id!=='all').forEach(c=>{
+    const pool=phrases.filter(p=>p.cat===c.id);
+    const done=pool.filter(p=>p.learned).length;
+    const pct=pool.length?Math.round(done/pool.length*100):0;
+    const div=document.createElement('div');
+    div.className='cat-prog-item';
+    div.innerHTML=`
+      <div class="cat-prog-header">
+        <span class="cat-prog-dot" style="background:${c.color}"></span>
+        <span class="cat-prog-name">${esc(c.name)}</span>
+        <span class="cat-prog-nums">${done}/${pool.length} · %${pct}</span>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${c.color}"></div></div>`;
+    catList.appendChild(div);
+  });
+
+  // learned list
+  const ll=document.getElementById('learned-list');
+  const learned=phrases.filter(p=>p.learned);
+  if(!learned.length){ll.innerHTML='<div class="empty-state">Henüz işaretlenen cümle yok.<br>Tabloda ✓ butonuna basarak öğrenildi işaretle!</div>';return;}
+  ll.innerHTML='';
+  learned.forEach(p=>{
+    const cat=getCat(p.cat);
+    const div=document.createElement('div');div.className='learned-item';
+    div.innerHTML=`<span class="learned-item-en">${esc(p.en)}</span><span class="learned-item-tr">${esc(p.tr)}</span><span class="learned-item-cat" style="color:${cat.color}">${esc(cat.name)}</span>`;
+    ll.appendChild(div);
+  });
+}
+
+// ══ CATEGORY MODAL ══
+let modalCatColor=PALETTE[0];
+function openCatModal(){modalCatColor=PALETTE[0];document.getElementById('modal-cat-name').value='';renderSwatches();document.getElementById('catModal').classList.add('open');setTimeout(()=>document.getElementById('modal-cat-name').focus(),100);}
+function closeCatModal(){document.getElementById('catModal').classList.remove('open');}
+function renderSwatches(){
+  const w=document.getElementById('color-swatches');w.innerHTML='';
+  PALETTE.forEach(c=>{const s=document.createElement('div');s.className='color-swatch'+(c===modalCatColor?' selected':'');s.style.background=c;s.onclick=()=>{modalCatColor=c;renderSwatches();};w.appendChild(s);});
+}
+function saveCategory(){
+  const name=document.getElementById('modal-cat-name').value.trim();if(!name)return;
+  categories.push({id:uid(),name,color:modalCatColor});
+  saveData();closeCatModal();renderAll();renderFcCatFilter();
+}
+document.getElementById('catModal').addEventListener('click',e=>{if(e.target===document.getElementById('catModal'))closeCatModal();});
+
+// ══════════════════════════════════════
+//  READING VIEW
+// ══════════════════════════════════════
+let readTab='stories', readLevel='B1';
+let currentArticle=null, articleSpeaking=false;
+let popupWord='', popupWordData=null;
+
+
+// ══ HAZIR İÇERİK KÜTÜPHANESİ (offline/local için) ══
+const CONTENT_LIBRARY={
+  stories:{
+    A1:[
+      {title:"The Lost Dog",text:"Tom has a dog. The dog's name is Max. One day, Max runs away from home.\n\nTom looks for Max in the park. He asks his friends, 'Do you see my dog?' They say, 'No, sorry.'\n\nTom goes home. Max is at the door! Max is happy. Tom is happy too. Tom gives Max food and water. They play together all day.",keywords:[{word:"lost",type:"adj",definition:"unable to find the way",turkish:"kaybolmuş",example:"The dog is lost."},{word:"runs away",type:"verb",definition:"leaves quickly without permission",turkish:"kaçmak",example:"Max runs away from home."},{word:"looks for",type:"verb",definition:"tries to find",turkish:"aramak",example:"Tom looks for Max."}],wordCount:75},
+      {title:"My Morning",text:"I wake up at seven o'clock. I wash my face and brush my teeth. Then I eat breakfast.\n\nI like eggs and toast. I drink orange juice. It is good.\n\nAfter breakfast, I go to school. I walk with my friend Sara. We talk and laugh. School starts at eight o'clock. I like school.",keywords:[{word:"wake up",type:"verb",definition:"stop sleeping",turkish:"uyanmak",example:"I wake up at seven."},{word:"brush",type:"verb",definition:"clean with a brush",turkish:"fırçalamak",example:"I brush my teeth."},{word:"breakfast",type:"noun",definition:"the first meal of the day",turkish:"kahvaltı",example:"I eat breakfast every day."}],wordCount:72}
+    ],
+    B1:[
+      {title:"The Job Interview",text:"Sarah walked into the office and took a deep breath. She had prepared for this interview for weeks, but she still felt nervous. The waiting room was quiet except for the sound of a clock ticking.\n\nWhen her name was called, she stood up and smiled. The interviewer, Mr. Johnson, greeted her warmly. 'Tell me about yourself,' he said.\n\nSarah spoke clearly and confidently. She talked about her experience and her goals. At the end, Mr. Johnson smiled and said, 'We'll be in touch.' Sarah left feeling hopeful.",keywords:[{word:"nervous",type:"adj",definition:"anxious or worried",turkish:"gergin, sinirli",example:"She felt nervous before the interview."},{word:"prepared",type:"verb",definition:"made ready beforehand",turkish:"hazırlanmak",example:"She had prepared for weeks."},{word:"confidently",type:"adv",definition:"in a self-assured manner",turkish:"kendinden emin şekilde",example:"She spoke confidently."},{word:"hopeful",type:"adj",definition:"feeling optimistic",turkish:"umutlu",example:"She left feeling hopeful."}],wordCount:120},
+      {title:"A Rainy Day Decision",text:"It had been raining for three days straight. Marcus sat by the window, watching the drops race down the glass. He had a decision to make — accept the job offer in another city, or stay close to his family.\n\nHis mother had always told him, 'Opportunity doesn't knock twice.' But his friends were here, his memories were here.\n\nFinally, he picked up his phone and called his mother. 'I'm going,' he said. There was a long pause. Then she laughed warmly. 'I know,' she said. 'I packed your bags yesterday.'",keywords:[{word:"straight",type:"adv",definition:"continuously, without stopping",turkish:"aralıksız",example:"It rained for three days straight."},{word:"opportunity",type:"noun",definition:"a chance to do something",turkish:"fırsat",example:"Opportunity doesn't knock twice."},{word:"decision",type:"noun",definition:"a choice you make",turkish:"karar",example:"He had a decision to make."},{word:"pause",type:"noun",definition:"a short stop or break",turkish:"duraklama",example:"There was a long pause."}],wordCount:130}
+    ],
+    B2:[
+      {title:"The Midnight Library",text:"Every night at midnight, the old library on Elm Street unlocked its doors — though no one in town could explain why. The librarian, an elderly woman named Mrs. Harrow, simply said it had always been that way.\n\nOne night, a young man named Daniel, unable to sleep, wandered inside. The shelves stretched endlessly in every direction, filled with books whose titles shifted when he wasn't looking directly at them.\n\nHe pulled one out. It was his own name on the cover. Inside were pages describing paths his life could have taken — roads not yet traveled, choices unmade. He read until dawn, then placed the book back carefully, wondering which story he would choose to live.",keywords:[{word:"unlocked",type:"verb",definition:"opened with a key or mechanism",turkish:"açmak (kilidini)",example:"The library unlocked its doors."},{word:"endlessly",type:"adv",definition:"without any limit or end",turkish:"sonsuz şekilde",example:"The shelves stretched endlessly."},{word:"wandered",type:"verb",definition:"walked without a clear destination",turkish:"dolaşmak, gezmek",example:"He wandered inside the library."},{word:"shifted",type:"verb",definition:"changed position slightly",turkish:"kaymak, değişmek",example:"The titles shifted when he looked away."}],wordCount:145}
+    ],
+    C1:[
+      {title:"The Weight of Silence",text:"There is a particular kind of silence that falls between two people who have said everything and yet left the most important things unspoken. Elena and her brother Marcus sat across from each other at their childhood kitchen table, the untouched cups of tea growing cold between them.\n\nTheir mother had died three weeks ago. The estate lawyer had called twice. There were documents to sign, belongings to sort through — practical matters that neither of them could bring themselves to address, because doing so would mean acknowledging that the waiting was truly over.\n\n'She kept your drawings,' Marcus said suddenly, his voice barely above a whisper. Elena looked up. 'All of them. From when you were seven. In a box under her bed.'\n\nThe silence that followed was different — lighter, somehow, as though something long suspended had finally been allowed to settle.",keywords:[{word:"unspoken",type:"adj",definition:"not said aloud, kept inside",turkish:"söylenmemiş, ifade edilmemiş",example:"The most important things were left unspoken."},{word:"estate",type:"noun",definition:"all property left by a person after death",turkish:"miras, mülk",example:"The estate lawyer called twice."},{word:"acknowledge",type:"verb",definition:"to accept or admit something is true",turkish:"kabul etmek, teslim olmak",example:"They couldn't acknowledge that the waiting was over."},{word:"suspended",type:"verb",definition:"hanging or paused in an uncertain state",turkish:"askıda kalmak",example:"Something long suspended finally settled."}],wordCount:185}
+    ]
+  },
+  biographies:{
+    A1:[{title:"Marie Curie: A Great Scientist",text:"Marie Curie was a scientist. She was born in Poland in 1867. She moved to France to study.\n\nMarie worked very hard. She studied science at university. She was the first woman to do this.\n\nShe discovered two new elements: polonium and radium. She won the Nobel Prize two times. She is famous all over the world. Marie Curie showed that women can do great things in science.",keywords:[{word:"scientist",type:"noun",definition:"a person who studies science",turkish:"bilim insanı",example:"Marie Curie was a scientist."},{word:"discovered",type:"verb",definition:"found something new",turkish:"keşfetmek",example:"She discovered two elements."},{word:"famous",type:"adj",definition:"known by many people",turkish:"ünlü",example:"She is famous all over the world."}],wordCount:80}],
+    B1:[{title:"Elon Musk: The Dreamer Who Changed the World",text:"Elon Musk was born in South Africa in 1971. As a child, he was quiet and bookish, spending hours reading encyclopedias. At twelve, he taught himself to code and sold his first video game.\n\nHe moved to North America for university and later co-founded PayPal, which revolutionized online payments. But Musk wasn't finished dreaming. He founded SpaceX with the goal of making humans a multi-planetary species, and Tesla to accelerate the world's shift to electric vehicles.\n\nMany people thought his ideas were impossible. Rockets that land themselves? Electric cars that outsell traditional ones? Today, both are reality. Musk's story teaches us that ambitious goals, even when laughed at, can reshape the world.",keywords:[{word:"bookish",type:"adj",definition:"fond of reading and studying",turkish:"kitap kurdu, okumayı seven",example:"He was a quiet, bookish child."},{word:"revolutionized",type:"verb",definition:"completely changed something",turkish:"devrim yaratmak",example:"PayPal revolutionized online payments."},{word:"ambitious",type:"adj",definition:"having a strong desire to succeed",turkish:"hırslı, iddialı",example:"He had ambitious goals."}],wordCount:140}],
+    B2:[{title:"Frida Kahlo: Pain, Art, and Identity",text:"Frida Kahlo was born in Mexico in 1907, and her life was defined by both extraordinary suffering and extraordinary creativity. At six, she contracted polio, which left one leg thinner than the other. At eighteen, she survived a devastating bus accident that shattered her spine, collarbone, and pelvis, leaving her bedridden for months.\n\nDuring her recovery, she began to paint — self-portraits that explored her physical pain, her Mexican identity, and her turbulent marriage to the muralist Diego Rivera. Her work was intensely personal, blending realism with surrealist imagery and indigenous symbolism.\n\nKahlo became an international icon, though she received little commercial recognition during her lifetime. Today, her paintings sell for millions, and her image — the unibrow, the flower crown, the Tehuana dress — is recognized worldwide as a symbol of resilience and self-expression.",keywords:[{word:"contracted",type:"verb",definition:"became ill with a disease",turkish:"hastalığa yakalanmak",example:"She contracted polio at age six."},{word:"devastating",type:"adj",definition:"causing great damage or distress",turkish:"yıkıcı, yıkım yaratan",example:"She survived a devastating accident."},{word:"turbulent",type:"adj",definition:"full of conflict and disorder",turkish:"çalkantılı, fırtınalı",example:"Her turbulent marriage to Diego Rivera."},{word:"resilience",type:"noun",definition:"the ability to recover from difficulties",turkish:"dayanıklılık, toparlanma gücü",example:"Her image became a symbol of resilience."}],wordCount:170}]
+  },
+  quotes:{
+    A1:[{title:"Simple Words, Big Meaning",text:'"Be yourself." — Oscar Wilde\nThis means: don\'t try to be someone else. You are special. Be happy with who you are.\n\n"Smile and the world smiles with you." — Stanley Gordon West\nWhen you are happy, people around you are happy too. A smile is free and beautiful.\n\n"Every day is a new beginning." — Unknown\nEvery morning is a new chance. Yesterday is finished. Today, you can start again and do your best.',keywords:[{word:"beginning",type:"noun",definition:"the start of something",turkish:"başlangıç",example:"Every day is a new beginning."},{word:"yourself",type:"pronoun",definition:"you, not anyone else",turkish:"kendin",example:"Be yourself."},{word:"chance",type:"noun",definition:"an opportunity",turkish:"şans, fırsat",example:"Every morning is a new chance."}],wordCount:90}],
+    B1:[{title:"Words That Changed History",text:'"The only way to do great work is to love what you do." — Steve Jobs\nJobs believed that passion is the foundation of excellence. If you force yourself through work you hate, the result will always be mediocre. But when you genuinely care about what you create, quality follows naturally.\n\n"In the middle of every difficulty lies opportunity." — Albert Einstein\nEinstein reminded us that obstacles are not dead ends — they are hidden doors. Our greatest breakthroughs often come not despite our struggles, but because of them.\n\n"It does not matter how slowly you go as long as you do not stop." — Confucius\nProgress, no matter how small, is still progress. The only true failure is giving up entirely.',keywords:[{word:"passion",type:"noun",definition:"a strong feeling of enthusiasm",turkish:"tutku, ihtiras",example:"Passion is the foundation of great work."},{word:"mediocre",type:"adj",definition:"of only average quality",turkish:"vasat, orta düzeyde",example:"The result will always be mediocre."},{word:"breakthrough",type:"noun",definition:"an important discovery or achievement",turkish:"çığır açan gelişme",example:"Our greatest breakthroughs come from struggles."}],wordCount:145}],
+    B2:[{title:"On Courage, Time, and the Human Spirit",text:'"Courage is not the absence of fear, but the triumph over it." — Nelson Mandela\nMandela spent 27 years in prison rather than abandon his principles. He understood that bravery isn\'t the lack of fear — it\'s choosing to act despite it. Fear is natural; paralysis is optional.\n\n"The two most important days in your life are the day you are born and the day you find out why." — Mark Twain\nTwain suggests that mere existence is not enough. Purpose gives life its shape. Without knowing your \'why\', you drift through days that blur into years.\n\n"We are what we repeatedly do. Excellence, then, is not an act, but a habit." — Aristotle\nAristotle\'s insight cuts through modern myths of sudden inspiration. Greatness is not a single grand gesture — it is the accumulation of disciplined, daily choices made when no one is watching.',keywords:[{word:"triumph",type:"noun",definition:"a great victory or achievement",turkish:"zafer, üstün gelme",example:"Courage is the triumph over fear."},{word:"paralysis",type:"noun",definition:"inability to act or move",turkish:"felç, hareketsizlik",example:"Fear is natural; paralysis is optional."},{word:"accumulation",type:"noun",definition:"the gradual gathering of things over time",turkish:"birikim, yığılma",example:"Greatness is the accumulation of daily choices."},{word:"disciplined",type:"adj",definition:"showing controlled, orderly behavior",turkish:"disiplinli",example:"Disciplined daily choices lead to excellence."}],wordCount:175}]
+  }
+};
+
+function getContentForLevel(tab,level){
+  const pool=CONTENT_LIBRARY[tab];
+  if(!pool) return null;
+  // Try exact level, then fall back to nearest
+  const order=['A1','A2','B1','B2','C1','C2'];
+  const idx=order.indexOf(level);
+  for(let i=idx;i>=0;i--){
+    const arr=pool[order[i]];
+    if(arr&&arr.length) return arr[Math.floor(Math.random()*arr.length)];
+  }
+  for(let i=idx+1;i<order.length;i++){
+    const arr=pool[order[i]];
+    if(arr&&arr.length) return arr[Math.floor(Math.random()*arr.length)];
+  }
+  return null;
+}
+
+function setReadTab(tab){
+  readTab=tab;
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.toggle('active',b.id==='rtab-'+tab));
+}
+function setLevel(l){
+  readLevel=l;
+  document.querySelectorAll('.level-pill').forEach(b=>b.classList.toggle('active',b.dataset.level===l));
+}
+
+const READ_TYPES={
+  stories:{label:'Hikaye',icon:'📚',prompt:(level)=>`Write a short English story for ${level} level learners. 150-200 words, engaging, with a twist. Return ONLY JSON: {"title":"...","text":"para1\\n\\npara2\\n\\npara3","keywords":[{"word":"...","type":"noun/verb/adj","definition":"brief English def","turkish":"Türkçe anlam","example":"example from text"}],"wordCount":160} Include 6 keywords.`},
+  biographies:{label:'Biyografi',icon:'🧑‍💼',prompt:(level)=>`Write a short biography of a famous person for ${level} level English learners. 150-200 words. Return ONLY JSON: {"title":"Name: Short Biography","text":"para1\\n\\npara2\\n\\npara3","keywords":[{"word":"...","type":"...","definition":"...","turkish":"...","example":"..."}],"wordCount":160} Include 6 keywords.`},
+  quotes:{label:'Alıntılar',icon:'💬',prompt:(level)=>`Give 4 famous English quotes with explanations for ${level} learners. Return ONLY JSON: {"title":"Famous Quotes","text":"\"quote\" — Author\\nexplanation\\n\\n\"quote2\" — Author2\\nexplanation2","keywords":[{"word":"...","type":"...","definition":"...","turkish":"...","example":"..."}],"wordCount":160} Include 6 keywords.`}
+};
+
+async function loadContent(){
+  const type=READ_TYPES[readTab];
+  document.getElementById('article-placeholder').style.display='none';
+  document.getElementById('article-content').style.display='none';
+  document.getElementById('art-vocab').style.display='none';
+  document.getElementById('article-loading').style.display='block';
+  closeWordPopup();
+  stopArticleSpeech();
+
+  const loadingTexts=['İçerik yükleniyor...','Kelimeler hazırlanıyor...','Neredeyse hazır...'];
+  let li=0;
+  const ltimer=setInterval(()=>{
+    document.getElementById('ai-loading-text').textContent=loadingTexts[li%loadingTexts.length];li++;
+  },800);
+
+  // Puter.js ile AI üretimi dene, olmazsa hazır içerik kullan
+  let parsed=null;
+
+  // file:// protokolünde veya Puter yoksa direkt hazır içerik
+  const isLocal=location.protocol==='file:';
+
+  if(!isLocal && typeof puter!=='undefined'){
+    try{
+      const prompt=type.prompt(readLevel);
+      const resp=await puter.ai.chat(prompt,{model:'gemini-2.0-flash'});
+      const raw=typeof resp==='string'?resp:(resp?.message?.content||resp?.content||'');
+      const jsonMatch=raw.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+      if(jsonMatch) parsed=JSON.parse(jsonMatch[0]);
+    }catch(e){ parsed=null; }
+  }
+
+  // Hazır içerik fallback
+  if(!parsed) parsed=getContentForLevel(readTab,readLevel);
+
+  clearInterval(ltimer);
+
+  if(!parsed){
+    document.getElementById('article-loading').style.display='none';
+    document.getElementById('article-placeholder').style.display='block';
+    document.getElementById('article-placeholder').innerHTML=`<div class="ap-icon">📭</div><div class="ap-title">İçerik bulunamadı</div><div class="ap-sub">Bu seviye için henüz içerik eklenmemiş.</div>`;
+    return;
+  }
+
+  currentArticle=parsed;
+  renderArticle(parsed,type);
+}
+
+function renderArticle(data,type){
+  document.getElementById('article-loading').style.display='none';
+  document.getElementById('article-content').style.display='block';
+  document.getElementById('art-level-badge').textContent=readLevel;
+  document.getElementById('art-type-badge').textContent=type.icon+' '+type.label;
+  document.getElementById('art-wc').textContent=(data.wordCount||'')+'w';
+  document.getElementById('art-title').textContent=data.title||'';
+
+  // Render clickable words
+  const textEl=document.getElementById('art-text');
+  const paragraphs=(data.text||'').split(/\n\n+/).filter(Boolean);
+  textEl.innerHTML=paragraphs.map(p=>`<p>${makeClickable(p)}</p>`).join('');
+
+  // Keywords
+  if(data.keywords&&data.keywords.length){
+    document.getElementById('art-vocab').style.display='block';
+    const chips=document.getElementById('vocab-chips');
+    chips.innerHTML='';
+    data.keywords.forEach(kw=>{
+      const c=document.createElement('button');
+      c.className='vocab-chip';c.textContent=kw.word;
+      c.onclick=()=>showWordPopupData(kw,null);
+      chips.appendChild(c);
+    });
+  }
+}
+
+function makeClickable(text){
+  return text.replace(/([a-zA-Z'-]+)/g,(word)=>{
+    const clean=word.replace(/^['-]+|['-]+$/g,'');
+    if(clean.length<3)return word;
+    return `<span class="clickable-word" onclick="onWordClick(event,'${clean.replace(/'/g,"\\'")}','${word.replace(/'/g,"\\'")}')">${word}</span>`;
+  });
+}
+
+function onWordClick(e,word,display){
+  e.stopPropagation();
+  // highlight
+  document.querySelectorAll('.clickable-word.highlighted').forEach(el=>el.classList.remove('highlighted'));
+  e.target.classList.add('highlighted');
+  // check if in keywords
+  if(currentArticle&&currentArticle.keywords){
+    const kw=currentArticle.keywords.find(k=>k.word.toLowerCase()===word.toLowerCase());
+    if(kw){showWordPopupData(kw,e);return;}
+  }
+  fetchWordPopup(word,e);
+}
+
+async function fetchWordPopup(word,e){
+  showWordPopupLoading(word,e);
+  try{
+    const prompt=`For the English word "${word}", return ONLY JSON (no markdown, no extra text):
+{"word":"${word}","phonetic":"/fəˈnetɪk/","type":"noun/verb/adj/adv/prep/conj","definition":"brief English definition","turkish":"Türkçe anlamı","example":"A short example sentence."}`;
+    const resp=await puter.ai.chat(prompt,{model:'gemini-2.0-flash'});
+    const raw=typeof resp==='string'?resp:(resp?.message?.content||resp?.content||'');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const jsonMatch=clean.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('no json');
+    const parsed=JSON.parse(jsonMatch[0]);
+    showWordPopupData(parsed,e);
+  }catch(err){
+    // Fallback: MyMemory ile sadece Türkçe göster
+    try{
+      const tr=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|tr`);
+      const trData=await tr.json();
+      const turkish=trData.responseData?.translatedText||'';
+      showWordPopupData({word,phonetic:'',type:'',definition:'',turkish,example:''},e);
+    }catch(e2){
+      document.getElementById('word-popup').style.display='none';
+    }
+  }
+}
+
+function showWordPopupLoading(word,e){
+  const popup=document.getElementById('word-popup');
+  document.getElementById('wp-word').textContent=word;
+  document.getElementById('wp-phonetic').textContent='...';
+  document.getElementById('wp-type').textContent='';
+  document.getElementById('wp-def').textContent='Yükleniyor...';
+  document.getElementById('wp-tr').textContent='';
+  document.getElementById('wp-example').textContent='';
+  popup.style.display='block';
+  positionPopup(popup,e);
+  popupWord=word;
+}
+
+function showWordPopupData(kw,e){
+  popupWord=kw.word;
+  popupWordData=kw;
+  const popup=document.getElementById('word-popup');
+  document.getElementById('wp-word').textContent=kw.word;
+  document.getElementById('wp-phonetic').textContent=kw.phonetic||'';
+  document.getElementById('wp-type').textContent=kw.type||'';
+  document.getElementById('wp-def').textContent=kw.definition||'';
+  document.getElementById('wp-tr').textContent=kw.turkish||'';
+  document.getElementById('wp-example').textContent=kw.example?'"'+kw.example+'"':'';
+  popup.style.display='block';
+  if(e) positionPopup(popup,e);
+  speakPopupWord();
+}
+
+function positionPopup(popup,e){
+  if(!e){// center-ish
+    popup.style.top='120px';popup.style.left='50%';popup.style.transform='translateX(-50%)';return;
+  }
+  popup.style.transform='';
+  const pw=300,ph=240;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  let x=e.clientX+10, y=e.clientY+10;
+  if(x+pw>vw-10) x=e.clientX-pw-10;
+  if(y+ph>vh-10) y=e.clientY-ph-10;
+  if(x<10) x=10;
+  if(y<10) y=10;
+  popup.style.left=x+'px';popup.style.top=y+'px';
+}
+
+function closeWordPopup(){
+  document.getElementById('word-popup').style.display='none';
+  document.querySelectorAll('.clickable-word.highlighted').forEach(el=>el.classList.remove('highlighted'));
+  popupWord='';popupWordData=null;
+}
+
+function speakPopupWord(){
+  if(popupWord&&window.speechSynthesis){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(popupWord);
+    u.lang='en-US';
+    const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function searchPopupWord(){
+  if(!popupWord)return;
+  document.getElementById('dict-input').value=popupWord;
+  if(window.innerWidth>780&&!dictOpen)openDictPanel();
+  switchView('table');
+  searchWord();
+}
+
+function addWordToList(){
+  if(!popupWord)return;
+  const tr=popupWordData?.turkish||'';
+  const cat=categories.find(c=>c.id!=='all')?.id||'';
+  phrases.push({id:nextId++,cat,en:popupWord+(popupWordData?.example?' — '+popupWordData.example:''),tr,learned:false});
+  saveData();renderAll();
+  // flash feedback
+  const btn=document.querySelector('.wp-actions .btn-primary');
+  if(btn){const orig=btn.textContent;btn.textContent='✓ Eklendi!';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1200);}
+}
+
+// Article TTS
+let articleUtterances=[];
+function toggleArticleSpeech(){
+  if(articleSpeaking){stopArticleSpeech();return;}
+  if(!currentArticle)return;
+  articleSpeaking=true;
+  const btn=document.getElementById('art-speak-btn');
+  btn.textContent='⏹ Durdur';btn.style.background='var(--red)';
+  const text=(currentArticle.title||'')+'. '+(currentArticle.text||'').replace(/\n+/g,' ');
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=getSpeed();
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('en-'));if(v)u.voice=v;
+  u.onend=u.onerror=()=>stopArticleSpeech();
+  window.speechSynthesis.speak(u);
+}
+function stopArticleSpeech(){
+  articleSpeaking=false;
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  const btn=document.getElementById('art-speak-btn');
+  if(btn){btn.textContent='🔊 Sesli Oku';btn.style.background='';}
+}
+
+// Close popup on outside click
+document.addEventListener('click',e=>{
+  const popup=document.getElementById('word-popup');
+  if(popup&&popup.style.display!=='none'&&!popup.contains(e.target)&&!e.target.classList.contains('clickable-word')&&!e.target.classList.contains('vocab-chip')){
+    closeWordPopup();
+  }
+});
+
+// ══ KEYBOARD ══
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.activeElement.id==='add-en')document.getElementById('add-tr').focus();
+  else if(e.key==='Enter'&&document.activeElement.id==='add-tr')addRow();
+  else if(e.key==='Enter'&&document.activeElement.id==='dict-input')searchWord();
+  else if(e.key==='Escape'){closeCatModal();closeSidebar();}
+  else if(e.key===' '&&currentView==='flashcard'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();flipCard();}
+  else if(e.key==='ArrowRight'&&currentView==='flashcard')fcNav(1);
+  else if(e.key==='ArrowLeft'&&currentView==='flashcard')fcNav(-1);
+});
+
+// ══ INIT ══
+document.addEventListener('DOMContentLoaded',()=>{
+  renderAll();
+  renderFcCatFilter();
+  if(window.innerWidth<=780){document.getElementById('dict-panel').style.display='none';dictOpen=false;}
+});
+</script>
+</body>
+</html>
